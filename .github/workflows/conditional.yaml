@@ -1,0 +1,72 @@
+name: Deploy Conditional
+on:
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      npm-cache-dir: ${{ steps.npm-cache-dir.outputs.dir }}
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v3
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        run: npm ci
+      - name: Lint Code
+        run: npm run lint
+      - name: Run Tests
+        run: npm run test
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      script-file: ${{ steps.publish.outputs.my-value }}
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v3
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ needs.test.outputs.npm-cache-dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build Project
+        run: npm run build
+      - name: Publish JS Filename
+        id: publish
+        run: find dist/assets/*.js -type f -execdir echo 'my-value={}' >> $GITHUB_OUTPUT ';'
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+      - name: Output the artefact contents
+        run: ls
+      - name: Output JS filename
+        run: echo "${{ needs.build.outputs.script-file }}"
+      - name: Deploy to host
+        run: echo "Deploying to cloud host..."
+
