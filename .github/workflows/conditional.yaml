@@ -97,6 +97,7 @@ jobs:
       - name: Deploy to host
         run: echo "Deploying to cloud host..."
   report:
+    needs: deploy
     if: failure()
     runs-on: ubuntu-latest
     steps:
