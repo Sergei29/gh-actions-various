@@ -2,7 +2,7 @@ name: Deploy Conditional
 on:
   push:
     branches:
-      - main
+      - conditional-workflow
 jobs:
   test:
     runs-on: ubuntu-latest
