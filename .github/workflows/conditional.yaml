@@ -96,4 +96,11 @@ jobs:
         run: echo "${{ needs.build.outputs.script-file }}"
       - name: Deploy to host
         run: echo "Deploying to cloud host..."
-
+  report:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output Information
+        run:  |
+          echo "Something went wrong"
+          echo "${{ github }}"
