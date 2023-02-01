@@ -28,13 +28,19 @@ jobs:
         run: npm run lint
   test:
     runs-on: ubuntu-latest
+    outputs:
+      npm-cache-dir: ${{ steps.npm-cache-dir.outputs.dir }}
     steps:
       - name: Get Code
         uses: actions/checkout@v3
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
       - name: Cache Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ needs.test.outputs.npm-cache-dir }}
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
