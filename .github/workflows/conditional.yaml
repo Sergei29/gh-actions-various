@@ -27,8 +27,10 @@ jobs:
       - name: Lint Code
         run: npm run lint
       - name: Run Tests
+        id: run-tests
         run: npm run test
       - name: Upload Test Report
+        if: failure() && steps.run-tests.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: test-report
